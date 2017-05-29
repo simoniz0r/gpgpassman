@@ -1,1 +1,1 @@
-# [Bash Scripts](http://www.simonizor.gq/scripts)
+# [gpgpassman](http://www.simonizor.gq/gpgpassman)
