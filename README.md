@@ -1,1 +1,1 @@
-# [gpgpassman](http://www.simonizor.gq/gpgpassman)
+# [gpgpassman](http://www.simonizor.gq/linuxapps)
