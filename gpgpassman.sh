@@ -3,7 +3,7 @@
 # Dependencies: 'gpg', 'xclip', 'wget' (optional; for auto-updating gpgpassman), 'apg' (optional; for generationg passwords), 'zenity' (optional; for GUI)
 # If you have 'zenity' installed, executing 'gpgpassman gui' will show a full GUI for all of the scripts options.
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
-# Written by simonizor 3/22/2017 - http://www.simonizor.gq/gpgpassman
+# Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
 GPMVER="1.3.4"
 X="v1.3.4 - Added keyboard interrupt detection to decrypt argument when ran through terminal.  If you press 'Ctrl+C' before 45 seconds are up, the password will be cleared before exiting."
@@ -607,7 +607,7 @@ main () {
             if [ $return = "1" ]; then
                 zenitymain
             else
-                echo "gpgpassman - http://www.simonizor.gq/gpgpassman"
+                echo "gpgpassman - http://www.simonizor.gq/linuxapps"
                 echo "A script that uses 'gpg' to encrypt and decrypt passwords."
                 echo "gpgpassman now has a GUI; install 'zenity' to check it out!"
                 echo
