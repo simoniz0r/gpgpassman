@@ -5,8 +5,8 @@
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
-GPMVER="1.3.4"
-X="v1.3.4 - Added keyboard interrupt detection to decrypt argument when ran through terminal.  If you press 'Ctrl+C' before 45 seconds are up, the password will be cleared before exiting."
+GPMVER="1.3.5"
+X="v1.3.5 - Cleaned up quite a few things."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -536,17 +536,18 @@ main () {
             programisinstalled "apg"
             if [ "$return" = "1" ]; then
                 if [ "$ZHEADLESS" = "1" ]; then
-                    main "GEN"
+                    { echo "Passwords generated using 'apg -a 1 -m 30 -n 4':" ; apg -a 1 -m 30 -n 4 ; } | zenity --text-info --cancel-label=Exit --width=540 --height=460 --title=gpgpassman
+                    if [[ $? -eq 1 ]]; then
+                        exit 0
+                    fi
+                    zenitymain
                     exit 0
                 else
-                    apg -s -a 1 -m 30 -n 4
+                    echo "Passwords generated using 'apg -a 1 -m 30 -n 4':"
+                    apg -a 1 -m 30 -n 4
                     echo
                     read -p "Press ENTER to continue; terminal window will be cleared"
                     tput reset
-                fi
-                if [ "$ZHEADLESS" = "0" ];then
-                    noguimain
-                    exit 0
                 fi
             else
                 if [ "$ZHEADLESS" = "1" ]; then
@@ -556,43 +557,25 @@ main () {
                 else
                     echo "apg is not installed!"
                 fi
-                if [ "$ZHEADLESS" = "0" ]; then
-                    noguimain
-                    exit 0
-                fi
             fi
-            ;;
-        GEN)
-            ZHEADLESS="0"
-            x-terminal-emulator -e $SCRIPTNAME gen
-            ZHEADLESS="1"
-            nohup $SCRIPTNAME gui
             ;;
         h*)
             echo "gpgpassman - http://www.simonizor.gq/linuxapps"
             echo "A script that uses 'gpg' to encrypt and decrypt passwords."
             helpfunc
             echo
-            programisinstalled "curl"
+            programisinstalled "wget"
             if [ $return = "1" ]; then
                 updatecheck
             fi
             ;;
         Check*)
-            programisinstalled "curl"
+            programisinstalled "wget"
             if [ "$return" = "1" ]; then
-                programisinstalled "wget"
-                if [ "$return" = "1" ]; then
-                    x-terminal-emulator -e $SCRIPTNAME UPD
-                    exit 0
-                else
-                    zenity --error --text="'wget' is not installed; cannot check for updates!"
-                    SERVNAME=""
-                    zenitymain
-                    exit 0
-                fi
+                x-terminal-emulator -e $SCRIPTNAME UPD
+                exit 0
             else
-                zenity --error --text="'curl' is not installed; cannot check for updates!"
+                zenity --error --text="'wget' is not installed; cannot check for updates!"
                 SERVNAME=""
                 zenitymain
                 exit 0
@@ -611,12 +594,9 @@ main () {
                 echo "A script that uses 'gpg' to encrypt and decrypt passwords."
                 echo "gpgpassman now has a GUI; install 'zenity' to check it out!"
                 echo
-                programisinstalled "curl"
+                programisinstalled "wget"
                 if [ $return = "1" ]; then
-                    programisinstalled "wget"
-                    if [ $return = "1" ]; then
-                        updatecheck
-                    fi
+                    updatecheck
                 fi
                 echo
                 noguimain
@@ -626,16 +606,15 @@ main () {
             exit 0
             ;;
         *)
-            ZHEADLESS="0"
-            programisinstalled "curl"
-            if [ $return = "1" ]; then
-                programisinstalled "wget"
-                if [ $return = "1" ]; then
-                    updatecheck
-                fi
-            fi
+            echo "gpgpassman - http://www.simonizor.gq/linuxapps"
+            echo "A script that uses 'gpg' to encrypt and decrypt passwords."
+            helpfunc
             echo
-            noguimain
+            programisinstalled "wget"
+            if [ $return = "1" ]; then
+                updatecheck
+            fi
+            ;;
     esac
 }
 
@@ -644,7 +623,7 @@ if [ ! -f "$GPMCONFDIR/gpgpassman.conf" ]; then
     mkdir $GPMCONFDIR
     mkdir $GPMINITDIR
     echo "$GPMINITDIR" > $GPMCONFDIR/gpgpassman.conf
-    echo "$GPMCONFDIR created and config file written; run gpgpassman again."
+    zenity --error --text="$GPMCONFDIR created and config file written; rung gpgpassman again." || echo "$GPMCONFDIR created and config file written; run gpgpassman again."
     exit 0
 fi
 programisinstalled "gpg"
@@ -653,18 +632,10 @@ if [ $return = "1" ]; then
     if [ $return = "1" ]; then
         main "$1"
     else
-        programisinstalled "zenity"
-        if [ $return = "1" ]; then
-            zenity --error --text="xclip is not installed!"
-            exit 0
-        fi
-        echo "xclip is not installed!"
+        zenity --error --text="xclip is not installed!" || echo "xclip is not installed!"
+        exit 1
     fi
 else
-    programisinstalled "zenity"
-    if [ $return = "1" ]; then
-        zenity --error --text="gpg is not installed!"
-        exit 0
-    fi
-    echo "gpg is not installed!"
+    zenity --error --text="gpg is not installed!" || echo "gpg is not installed!"
+    exit 1
 fi
