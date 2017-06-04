@@ -158,14 +158,14 @@ updatecheck () {
                 exec /tmp/zenityupdatescript.sh
                 exit 0
             else
-                zenity --warning --text="gpgpassman was not updated!"
+                zenity --warning --title=gpgpassman --text="gpgpassman was not updated!"
                 zenitymain
                 exit 0
             fi
         fi
     else
         if [ "$ZHEADLESS" = "1" ]; then
-            zenity --info --text="gpgpassman is up to date."
+            zenity --info --title=gpgpassman --text="gpgpassman is up to date."
             zenitymain
             exit 0
         else
