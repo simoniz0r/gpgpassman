@@ -5,8 +5,8 @@
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
-GPMVER="1.4.0"
-X="v1.4.0 - Added zenity error for wrong password input during update."
+GPMVER="1.4.1"
+X="v1.4.1 - Changed exit statuses on error to exit 1 and removed a bunch of unnecessary exits."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -160,14 +160,12 @@ updatecheck () {
             else
                 zenity --warning --title=gpgpassman --text="gpgpassman was not updated!"
                 zenitymain
-                exit 0
             fi
         fi
     else
         if [ "$ZHEADLESS" = "1" ]; then
             zenity --info --title=gpgpassman --text="gpgpassman is up to date."
             zenitymain
-            exit 0
         else
             echo "Installed version: $GPMVER -- Current version: $VERTEST"
             echo "$UPNOTES"
@@ -221,7 +219,6 @@ main () {
                     if [[ $? -eq 1 ]]; then
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     fi
                 else
                     read -p "Input the service name to encrypt a password for: " SERVNAME
@@ -234,14 +231,12 @@ main () {
                         zenity --warning --text="Password for $SERVNAME was not overwritten."
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     else
                         echo -n "$(gpg -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
                         if [ "$(xclip -selection c -o)" = "" ]; then
                             zenity --error --text="Wrong password or gpg failure!"
                             SERVNAME=""
                             main "add"
-                            exit 0
                         fi
                         zenity --warning --text="Stored password for $SERVNAME removed"
                         rm -f $GPMDIR/$SERVNAME/$SERVNAME.gpg
@@ -250,12 +245,12 @@ main () {
                     read -p "Password for $SERVNAME is already stored; overwrite (clipboard will also be cleared)? Y/N"
                     if [[ $REPLY =~ ^[Nn]$ ]]; then
                         echo "Password for $SERVNAME was not overwritten."
-                        exit 0
+                        exit 1
                     else
                         echo -n "$(gpg -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
                         if [ "$(xclip -selection c -o)" = "" ]; then
                             echo "Wrong password or gpg failure!"
-                            exit 0
+                            exit 1
                         fi
                         echo -n "Password cleared from clipboard" | xclip -selection c -i
                     fi
@@ -266,12 +261,10 @@ main () {
                     zenity --error --timeout=5 --text="No service name entered; try again."
                     SERVNAME=""
                     main "add"
-                    exit 0
                 else
                     echo "No service name entered; try again."
                     SERVNAME=""
                     main "add"
-                    exit 0
                 fi
             fi
             if [ "$ZHEADLESS" = "1" ]; then
@@ -279,13 +272,11 @@ main () {
                 if [[ $? -eq 1 ]]; then
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 fi
                 PASSINPUT2=$(zenity --entry --hide-text --text="Input password again for $SERVNAME:")
                 if [[ $? -eq 1 ]]; then
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 fi
             else
                 echo "Input your password for $SERVNAME:"
@@ -300,12 +291,10 @@ main () {
                     zenity --error --text="Passwords to not match; try again!"
                     SERVNAME=""
                     main "add"
-                    exit 0
                 else
                     echo "Passwords do not match; try again!"
                     SERVNAME=""
                     main "add"
-                    exit 0
                 fi
             fi
             if [ ! -d "$GPMDIR" ]; then
@@ -323,39 +312,33 @@ main () {
                     zenity --warning --text="Password for $SERVNAME encrypted in $GPMDIR/$SERVNAME/$SERVNAME.gpg"
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 else
                     echo "Password for $SERVNAME encrypted in $GPMDIR/$SERVNAME/$SERVNAME.gpg"
+                    exit 0
                 fi
             else
                 if [ "$ZHEADLESS" = "1" ]; then
                     zenity --error --text="Failed to write encrypted file for $SERVNAME in $GPMDIR/$SERVNAME/$SERVNAME.gpg"
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 else
                     echo "Failed to write encrypted file for $SERVNAME in $GPMDIR/$SERVNAME/$SERVNAME.gpg"
+                    exit 1
                 fi
             fi
             ;;
         dec*|Dec*)
             if [ -z "$SERVNAME" ]; then
-                if [ $ZHEADLESS = "0" ]; then
-                    read -p "Input the service name to decrypt a password for: " SERVNAME
-                else
-                    programisinstalled "zenity"
-                    if [ $return = "1" ];then
-                        ZHEADLESS="1"
-                        SERVNAME=$(zenity --file-selection --file-filter=*.gpg --title="gpgpassman -- Select the gpg file to decrypt" --filename=$GPMDIR/)
-                        if [[ $? -eq 1 ]]; then
-                            SERVNAME=""
-                            zenitymain
-                            exit 0
-                        fi
-                        ZHEADLESS="1"
-                    else
-                        read -p "Enter the service name to decrypt password for: " SERVNAME
+                programisinstalled "zenity"
+                if [ $return = "1" ];then
+                    ZHEADLESS="1"
+                    SERVNAME=$(zenity --file-selection --file-filter=*.gpg --title="gpgpassman -- Select the gpg file to decrypt" --filename=$GPMDIR/)
+                    if [[ $? -eq 1 ]]; then
+                        SERVNAME=""
+                        zenitymain
                     fi
+                else
+                    read -p "Enter the service name to decrypt password for: " SERVNAME
                 fi
             fi
             if [ -f "$GPMDIR/$SERVNAME/$SERVNAME.gpg" ];then 
@@ -364,27 +347,26 @@ main () {
                 echo -n "$(gpg -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
                 if [ "$(xclip -selection c -o)" = "" ]; then
                     echo "Wrong password or gpg failure!"
-                    exit 0
+                    exit 1
                 fi
                 echo "$SERVNAME password copied to clipboard; clipboard will be cleared after 45 seconds..."
                 trap '{ echo ; echo "Keyboard interruppt; clearing password..." ; echo -n "Password cleared from clipboard" | xclip -selection c -i ; echo "Password cleard from clipboard." ; exit 0 ; }' INT
                 sleep 45
                 echo -n "Password cleared from clipboard" | xclip -selection c -i
                 echo "Password cleard from clipboard."
+                exit 0
             elif [ "$ZHEADLESS" = "1" ]; then
                 echo -n "$(gpg -d $SERVNAME)" | xclip -selection c -i
                 if [ "$(xclip -selection c -o)" = "" ]; then
                     zenity --error --text="Wrong password or gpg failure!"
                     SERVNAME=""
                     main "dec"
-                    exit 0
                 fi
                 zenity --forms --timeout=45 --text="Copied password to clipboard; clipboard will be cleared after 45 seconds..." --cancel-label="Clear now and return to main" --ok-label="Clear now and close"
                 if [[ $? -eq 1 ]]; then
                     echo -n "Password cleared from clipboard" | xclip -selection c -i
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 else
                     echo -n "Password cleared from clipboard" | xclip -selection c -i
                 fi
@@ -393,9 +375,9 @@ main () {
                     zenity --error --timeout=5 --text="No password found for $SERVNAME"
                     SERVNAME=""
                     main "dec"
-                    exit 0
                 fi
                 echo "No password found for $SERVNAME"
+                exit 1
             fi
             ;;
         bac*|Bac*)
@@ -405,7 +387,6 @@ main () {
                     if [[ $? -eq 1 ]]; then
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     fi
                 else
                     read -p "Input the full directory to backup your passwords to. Ex: '/home/simonizor/passwordbackup': " SERVNAME
@@ -428,19 +409,19 @@ main () {
                     zenity --warning --timeout=5 --text="Passwords have been backed up to $SERVNAME."
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 else
                     echo "Passwords have been backed up to $SERVNAME."
+                    exit 0
                 fi
             else
                 if [ "$ZHEADLESS" = "1" ]; then
                     zenity --error --timeout=5 --text="$SERVNAME is not a valid directory; use full directory path. Ex: '/home/simonizor/passwordbackup'"
                     SERVNAME=""
-                    main "dir"
-                    exit 0
+                    main "Bac"
                 else
                     echo "$SERVNAME is not a valid directory; use full directory path. Ex: 'gpgpassman bac /home/simonizor/passwordbackup'"
                     helpfunc
+                    exit 1
                 fi
             fi
             ;;
@@ -451,7 +432,6 @@ main () {
                     if [[ $? -eq 1 ]]; then
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     fi
                 else
                     read -p "Input the service name for the password you want to remove: " SERVNAME
@@ -464,21 +444,18 @@ main () {
                         zenity --warning --text="Password for $SERVNAME was not removed."
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     else
                         echo -n "$(gpg -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
                         if [ "$(xclip -selection c -o)" = "" ]; then
                             zenity --error --text="Wrong password or gpg failure!"
                             SERVNAME=""
                             main "rem"
-                            exit 0
                         fi
                         echo -n "Password cleared from clipboard" | xclip -selection c -i
                         rm -rf $GPMDIR/$SERVNAME
                         zenity --warning --text="Password for $SERVNAME was removed!"
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     fi
                 else
                     read -p "Passwords cannot be recovered; are you sure you want to remove the encrypted password for $SERVNAME? Y/N " -n 1 -r
@@ -487,13 +464,15 @@ main () {
                         echo -n "$(gpg -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
                         if [ "$(xclip -selection c -o)" = "" ]; then
                             echo "Wrong password or gpg failure!"
-                            exit 0
+                            exit 1
                         fi
                         echo -n "Password cleared from clipboard" | xclip -selection c -i
                         rm -rf $GPMDIR/$SERVNAME
                         echo "Password for $SERVNAME removed!"
+                        exit 0
                     else
                         echo "Password for $SERVNAME was not removed."
+                        exit 1
                     fi
                 fi
             else
@@ -501,9 +480,9 @@ main () {
                     zenity --error --timeout=5 --text="No password found for $SERVNAME"
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 else
                     echo "No password found for $SERVNAME"
+                    exit 1
                 fi
             fi
             ;;
@@ -514,13 +493,11 @@ main () {
                     if [[ $? -eq 1 ]]; then
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     fi
                     zenity --question --text="Only one directory can be managed by gpgpassman at a time; change password storage directory to $SERVNAME?" --ok-label="Yes"
                     if [[ $? -eq 1 ]]; then
                         SERVNAME=""
                         zenitymain
-                        exit 0
                     fi
                 else
                     read -p "Input the full directory to change password storage to. Ex: '/home/simonizor/mypasswords': " SERVNAME
@@ -543,19 +520,19 @@ main () {
                     zenity --warning --timeout=5 --text="gpgpassman storage directory changed to $(< ~/.config/gpgpassman/gpgpassman.conf)"
                     SERVNAME=""
                     zenitymain
-                    exit 0
                 else
                     echo "gpgpassman storage directory changed to $(< ~/.config/gpgpassman/gpgpassman.conf)"
+                    exit 0
                 fi
             else
                 if [ "$ZHEADLESS" = "1" ]; then
                     zenity --error --timeout=5 --text="$SERVNAME is not a valid directory; use full directory path. Ex: '/home/simonizor/mypasswords'"
                     SERVNAME=""
                     main "dir"
-                    exit 0
                 else
                     echo "$SERVNAME is not a valid directory; use full directory path. Ex: 'gpgpassman dir /home/simonizor/mypasswords'"
                     helpfunc
+                    exit 1
                 fi
             fi
             ;;
@@ -568,21 +545,22 @@ main () {
                         exit 0
                     fi
                     zenitymain
-                    exit 0
                 else
                     echo "Passwords generated using 'apg -a 1 -m 30 -n 4':"
                     apg -a 1 -m 30 -n 4
                     echo
                     read -p "Press ENTER to continue; terminal window will be cleared"
                     tput reset
+                    exit 0
                 fi
             else
                 if [ "$ZHEADLESS" = "1" ]; then
                     zenity --error --title=gpgpassman --text="apg is not installed; cannot generate passwords!"
                     zenitymain
-                    exit 0
+                    exit 1
                 else
                     echo "apg is not installed!"
+                    exit 1
                 fi
             fi
             ;;
@@ -598,6 +576,7 @@ main () {
                     updatecheck
                 fi
             fi
+            exit 0
             ;;
         Check*)
             programisinstalled "wget"
@@ -605,18 +584,17 @@ main () {
                 programisinstalled "git"
                 if [ "$return" = "1" ]; then
                     updatecheck
-                    exit 0
                 else
                     zenity --error --text="'git' is not installed; cannot download updates!"
                     SERVNAME=""
                     zenitymain
-                    exit 0
+                    exit 1
                 fi
             else
                 zenity --error --text="'wget' is not installed; cannot check for updates!"
                 SERVNAME=""
                 zenitymain
-                exit 0
+                exit 1
             fi
             ;;
         gui)
@@ -636,6 +614,7 @@ main () {
                     fi
                 fi
                 echo
+                exit 0
             fi
             ;;
         exit*|Exit*)
