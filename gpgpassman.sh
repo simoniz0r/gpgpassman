@@ -5,8 +5,8 @@
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
-GPMVER="1.3.8"
-X="v1.3.8 - Added password input for zenityupdatescript function when sudo is needed."
+GPMVER="1.3.9"
+X="v1.3.9 - Fixed zenity password input for update function."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -75,11 +75,11 @@ runupdate () {
     if [ "$SCRIPTNAME" = "/usr/bin/gpgpassman" ]; then
         git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
         if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-            SUDOPASS="$(zenity --password --title=gpgpassman --text="Enter your password in order to update gpgpassman:")"
-            echo "$SUDOPASS" | sudo -S rm -f /usr/bin/gpgpassman
-            sudo mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
+            zenity --password | sudo -S rm -f /usr/bin/gpgpassman
+            sudo  mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
             rm -rf /tmp/gpgpassman
-            sudo chmod +x /usr/bin/gpgpassman
+            sudo  chmod +x /usr/bin/gpgpassman
+            sudo -K
         else
             zenity --question --title=gpgpassman --text="Update Failed! Try again? "
             if [[ $? -eq 0 ]]; then
