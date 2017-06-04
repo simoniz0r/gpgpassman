@@ -5,7 +5,7 @@
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
-GPMVER="1.3.8"
+GPMVER="1.3.9"
 X="v1.3.9 - Fixed zenity password input for update function."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
