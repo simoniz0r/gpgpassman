@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs and uninstalls gpgpassman using wget
+# Installs and uninstalls gpgpassman using git
 
 main () {
     case $1 in
@@ -10,35 +10,16 @@ main () {
                 echo "gpgpassman was not installed."
                 exit 0
             fi
-            wget -O /tmp/gpgpassman https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.sh  || { echo "Download failed!" ; exit 0 ; }
-            if [ -f "/tmp/gpgpassman" ]; then
-                wget -O /tmp/gpgpassman.png https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.png  || { echo "Download failed!" ; exit 0 ; }
-                if [ -f "/tmp/gpgpassman.png" ]; then
-                    wget -O /tmp/gpgpassman.desktop https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.desktop  || { echo "Download failed!" ; exit 0 ; }
-                        if [ -f "/tmp/gpgpassman.desktop" ]; then
-                            echo "Moving gpgpassman to /usr/bin/gpgpassman"
-                            mv /tmp/gpgpassman /usr/bin/gpgpassman
-                            echo "Making gpgpassman executable"
-                            chmod +x /usr/bin/gpgpassman
-                            echo "Moving gpgpassman icon to /usr/share/icons/gpgpassman.png"
-                            mv /tmp/gpgpassman.png /usr/share/icons/gpgpassman.png
-                            echo "Moving .desktop file to /usr/share/applications/gpgpassman.desktop"
-                            mv /tmp/gpgpassman.desktop /usr/share/applications/gpgpassman.desktop
-                        else
-                            echo ".desktop file download failed; try installing again."
-                            rm -f /tmp/gpgpassman.sh
-                            rm -f /tmp/gpgpassman.png
-                            exit 0
-                        fi
-                else
-                    echo "Icon download failed; try installing again."
-                    rm -f /tmp/gpgpassman.sh
-                    exit 0
-                fi
-            else
-                echo "gpgpassman download failed; try installing again."
-                exit 0
-            fi
+            git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman || { echo "git clone failed; make sure you have git installed and try again later" ; exit 1 ; }
+            echo "Moving gpgpassman to /usr/bin/gpgpassman"
+            mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
+            echo "Making gpgpassman executable"
+            chmod +x /usr/bin/gpgpassman
+            echo "Moving gpgpassman icon to /usr/share/icons/gpgpassman.png"
+            mv /tmp/gpgpassman/gpgpassman.png /usr/share/icons/gpgpassman.png
+            echo "Moving .desktop file to /usr/share/applications/gpgpassman.desktop"
+            mv /tmp/gpgpassman/gpgpassman.desktop /usr/share/applications/gpgpassman.desktop
+
             ;;
         uninstall)
             read -p "Uninstall gpgpassman from /usr/bin/gpgpassman? Y/N " -n 1 -r

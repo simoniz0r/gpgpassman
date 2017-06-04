@@ -1,12 +1,12 @@
 #!/bin/bash
 # A script that uses 'gpg' to encrypt and decrypt passwords stored in '~/.gpgpassman'.
-# Dependencies: 'gpg', 'xclip', 'wget' (optional; for auto-updating gpgpassman), 'apg' (optional; for generationg passwords), 'zenity' (optional; for GUI)
+# Dependencies: 'gpg', 'xclip', 'git' and 'wget' (optional; for updating gpgpassman), 'apg' (optional; for generationg passwords), 'zenity' (optional; for GUI)
 # If you have 'zenity' installed, executing 'gpgpassman gui' will show a full GUI for all of the scripts options.
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
-GPMVER="1.3.5"
-X="v1.3.5 - Cleaned up quite a few things."
+GPMVER="1.3.6"
+X="v1.3.6 - Changed update method to use git for better update security."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -20,10 +20,11 @@ updatescript () {
 cat >/tmp/updatescript.sh <<EOL
 runupdate () {
     if [ "$SCRIPTNAME" = "/usr/bin/gpgpassman" ]; then
-        wget -O /tmp/gpgpassman.sh "https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.sh"
-        if [ -f "/tmp/gpgpassman.sh" ]; then
+        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
+        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
             sudo rm -f /usr/bin/gpgpassman
-            sudo mv /tmp/gpgpassman.sh /usr/bin/gpgpassman
+            sudo mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
+            rm -rf /tmp/gpgpassman
             sudo chmod +x /usr/bin/gpgpassman
         else
             read -p "Update Failed! Try again? Y/N " -n 1 -r
@@ -35,10 +36,11 @@ runupdate () {
             fi
         fi
     else
-        wget -O /tmp/gpgpassman.sh "https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.sh"
-        if [ -f "/tmp/gpgpassman.sh" ]; then
+        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
+        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
             rm -f $SCRIPTNAME
-            mv /tmp/gpgpassman.sh $SCRIPTNAME
+            mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME
+            rm -rf /tmp/gpgpassman
             chmod +x $SCRIPTNAME
         else
             read -p "Update Failed! Try again? Y/N " -n 1 -r
@@ -566,7 +568,10 @@ main () {
             echo
             programisinstalled "wget"
             if [ $return = "1" ]; then
-                updatecheck
+                programisinstalled "git"
+                if [ $return = "1" ]; then
+                    updatecheck
+                fi
             fi
             ;;
         Check*)
@@ -583,7 +588,13 @@ main () {
             ;;
         UPD)
             ZHEADLESS="1"
-            updatecheck
+            programisinstalled "wget"
+            if [ $return = "1" ]; then
+                programisinstalled "git"
+                if [ $return = "1" ]; then
+                    updatecheck
+                fi
+            fi
             ;;
         gui)
             programisinstalled "zenity"
@@ -596,7 +607,10 @@ main () {
                 echo
                 programisinstalled "wget"
                 if [ $return = "1" ]; then
-                    updatecheck
+                    programisinstalled "git"
+                    if [ $return = "1" ]; then
+                        updatecheck
+                    fi
                 fi
                 echo
                 noguimain
@@ -612,7 +626,10 @@ main () {
             echo
             programisinstalled "wget"
             if [ $return = "1" ]; then
-                updatecheck
+                programisinstalled "git"
+                if [ $return = "1" ]; then
+                    updatecheck
+                fi
             fi
             ;;
     esac
