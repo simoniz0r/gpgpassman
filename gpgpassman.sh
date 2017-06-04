@@ -5,8 +5,8 @@
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
-GPMVER="1.3.9"
-X="v1.3.9 - Fixed zenity password input for update function."
+GPMVER="1.4.0"
+X="v1.4.0 - Added zenity error for wrong password input during update."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -75,7 +75,7 @@ runupdate () {
     if [ "$SCRIPTNAME" = "/usr/bin/gpgpassman" ]; then
         git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
         if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-            zenity --password --title=gpgpassman | sudo -S rm -f /usr/bin/gpgpassman
+            zenity --password --title=gpgpassman | sudo -S rm -f /usr/bin/gpgpassman || { zenity --error --title=gpgpassman --text="Incorrect password!" ; exec $SCRIPTNAME gui ; exit 0 ; }
             sudo  mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
             rm -rf /tmp/gpgpassman
             sudo  chmod +x /usr/bin/gpgpassman
@@ -151,7 +151,7 @@ updatecheck () {
                 echo "gpgpassman was not updated."
             fi
         else
-            zenity --question --text="A new version is available; would you like to update?\n\n$UPNOTES"
+            zenity --question --title=gpgpassman --text="A new version is available; would you like to update?\n\n$UPNOTES"
             if [ $? -eq 0 ]; then
                 zenityupdatescript
                 chmod +x /tmp/zenityupdatescript.sh
