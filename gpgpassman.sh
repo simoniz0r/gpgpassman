@@ -5,8 +5,8 @@
 # Also with 'zenity', you can execuite 'gpgpassman dec' for direct access to decrypting passwords; can be used with a keybind.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
-GPMVER="1.3.6"
-X="v1.3.6 - Changed update method to use git for better update security."
+GPMVER="1.3.7"
+X="v1.3.7 - Added separate update function for zenity; when gpgpassman update check is ran through the GUI, all updating will be done through the GUI also (no more terminal window for updating when in GUI mode)."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -55,13 +55,6 @@ runupdate () {
     if [ -f $SCRIPTNAME ]; then
         echo "Update finished!"
         rm -f /tmp/updatescript.sh
-        if type zenity >/dev/null 2>&1; then
-            read -p "Press ENTER to continue"
-            nohup $SCRIPTNAME gui
-            exit 0
-        else
-            exec $SCRIPTNAME
-        fi
     else
         read -p "Update Failed! Try again? Y/N " -n 1 -r
         if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -76,67 +69,115 @@ runupdate
 EOL
 }
 
+zenityupdatescript () {
+cat >/tmp/zenityupdatescript.sh <<EOL
+runupdate () {
+    if [ "$SCRIPTNAME" = "/usr/bin/gpgpassman" ]; then
+        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
+        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
+            sudo rm -f /usr/bin/gpgpassman
+            sudo mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
+            rm -rf /tmp/gpgpassman
+            sudo chmod +x /usr/bin/gpgpassman
+        else
+            zenity --question --title=gpgpassman --text="Update Failed! Try again? "
+            if [[ $? -eq 0 ]]; then
+                runupdate
+            else
+                zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
+                exec $SCRIPTNAME gui
+                exit 0
+            fi
+        fi
+    else
+        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
+        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
+            rm -f $SCRIPTNAME
+            mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME
+            rm -rf /tmp/gpgpassman
+            chmod +x $SCRIPTNAME
+        else
+            zenity --question --title=gpgpassman --text="Update Failed! Try again? "
+            if [[ $? -eq 0 ]]; then
+                runupdate
+            else
+                zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
+                exec $SCRIPTNAME gui
+                exit 0
+            fi
+        fi
+    fi
+    if [ -f $SCRIPTNAME ]; then
+        zenity --info --title=gpgpassman --text="Update finished!"
+        rm -f /tmp/updatescript.sh
+        exec $SCRIPTNAME gui
+        exit 0
+    else
+        zenity --question --title=gpgpassman --text="Update Failed! Try again? "
+            if [[ $? -eq 0 ]]; then
+            runupdate
+        else
+            zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
+            exec $SCRIPTNAME gui
+            exit 0
+        fi
+    fi
+}
+runupdate
+EOL
+}
+
 updatecheck () {
     echo "Checking for new version..."
     UPNOTES="$(wget -q "https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.sh" -O - | sed -n '9p' | tr -d 'X="')"
     VERTEST="$(wget -q "https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.sh" -O - | sed -n '8p' | tr -d 'GPMVER="')"
     if [[ $GPMVER < $VERTEST ]]; then
-        echo "Installed version: $GPMVER -- Current version: $VERTEST"
-        echo "A new version is available!"
-        echo $UPNOTES
-        read -p "Would you like to update? Y/N " -n 1 -r
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            echo
-            echo "Creating update script..."
-            updatescript
-            chmod +x /tmp/updatescript.sh
-            echo "Running update script..."
-            exec /tmp/updatescript.sh
-            exit 0
-        else
-            if [ "$ZHEADLESS" = "1" ]; then
+        if [ "$ZHEADLESS" != "1" ]; then
+            echo "Installed version: $GPMVER -- Current version: $VERTEST"
+            echo "A new version is available!"
+            echo "$UPNOTES"
+            read -p "Would you like to update? Y/N " -n 1 -r
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
                 echo
-                read -p "Press ENTER to continue"
-                nohup $SCRIPTNAME gui
-                exit 0
-            elif [ "$ZHEADLESS" = "0" ];then
-                noguimain
+                echo "Creating update script..."
+                updatescript
+                chmod +x /tmp/updatescript.sh
+                echo "Running update script..."
+                exec /tmp/updatescript.sh
                 exit 0
             else
                 echo
                 echo "gpgpassman was not updated."
             fi
+        else
+            zenity --question --text="A new version is available; would you like to update?\n\n$UPNOTES"
+            if [ $? -eq 0 ]; then
+                zenityupdatescript
+                chmod +x /tmp/zenityupdatescript.sh
+                exec /tmp/zenityupdatescript.sh
+                exit 0
+            else
+                zenity --warning --text="gpgpassman was not updated!"
+                zenitymain
+                exit 0
+            fi
         fi
     else
         if [ "$ZHEADLESS" = "1" ]; then
-            echo "Installed version: $GPMVER -- Current version: $VERTEST"
-            echo $UPNOTES
-            echo "gpgpassman is up to date."
-            echo
-            read -p "Press ENTER to continue"
-            nohup $SCRIPTNAME gui
-            exit 0
-        elif [ "$ZHEADLESS" = "0" ];then
-            echo "Installed version: $GPMVER -- Current version: $VERTEST"
-            echo $UPNOTES
-            echo "gpgpassman is up to date."
-            echo
-            noguimain
+            zenity --info --text="gpgpassman is up to date."
+            zenitymain
             exit 0
         else
             echo "Installed version: $GPMVER -- Current version: $VERTEST"
-            echo $UPNOTES
+            echo "$UPNOTES"
             echo "gpgpassman is up to date."
         fi
     fi
 }
 
 programisinstalled () {
-  # set to 1 initially
   return=1
-  # set to 0 if not found
   type "$1" >/dev/null 2>&1 || { return=0; }
-  # return value
 }
 
 helpfunc () {
@@ -169,22 +210,6 @@ zenitymain () {
     fi
     ZHEADLESS="1"
     main "$ZMAINCASE"
-}
-
-noguimain () {
-    echo "What would you like to do?"
-    echo "${bold}Add${normal} an encrypted password."
-    echo "${bold}Decrypt${normal} a stored password."
-    echo "${bold}Backup${normal} your passwords."
-    echo "${bold}Remove${normal} a stored password."
-    echo "${bold}Change${normal} the default password storage directory."
-    echo "${bold}Generate${normal} new passwords using 'apg'."
-    echo "${bold}Help${normal}"
-    echo "${bold}Exit${normal}"
-    read -p "Choice? " -r
-    echo
-    main "$REPLY"
-    exit 0
 }
 
 main () {
@@ -292,7 +317,7 @@ main () {
             if [ "$ZHEADLESS" = "1" ]; then
                 zenity --warning --timeout=5 --text="Enter the password to be used for encryption/decryption:"
             fi
-            echo $PASSINPUT | gpg -c -o $GPMDIR/$SERVNAME/$SERVNAME.gpg
+            echo "$PASSINPUT" | gpg -c -o $GPMDIR/$SERVNAME/$SERVNAME.gpg
             if [ -f "$GPMDIR/$SERVNAME/$SERVNAME.gpg" ]; then
                 if [ "$ZHEADLESS" = "1" ]; then
                     zenity --warning --text="Password for $SERVNAME encrypted in $GPMDIR/$SERVNAME/$SERVNAME.gpg"
@@ -577,23 +602,21 @@ main () {
         Check*)
             programisinstalled "wget"
             if [ "$return" = "1" ]; then
-                x-terminal-emulator -e $SCRIPTNAME UPD
-                exit 0
+                programisinstalled "git"
+                if [ "$return" = "1" ]; then
+                    updatecheck
+                    exit 0
+                else
+                    zenity --error --text="'git' is not installed; cannot download updates!"
+                    SERVNAME=""
+                    zenitymain
+                    exit 0
+                fi
             else
                 zenity --error --text="'wget' is not installed; cannot check for updates!"
                 SERVNAME=""
                 zenitymain
                 exit 0
-            fi
-            ;;
-        UPD)
-            ZHEADLESS="1"
-            programisinstalled "wget"
-            if [ $return = "1" ]; then
-                programisinstalled "git"
-                if [ $return = "1" ]; then
-                    updatecheck
-                fi
             fi
             ;;
         gui)
@@ -613,7 +636,6 @@ main () {
                     fi
                 fi
                 echo
-                noguimain
             fi
             ;;
         exit*|Exit*)
@@ -631,6 +653,7 @@ main () {
                     updatecheck
                 fi
             fi
+            exit 0
             ;;
     esac
 }
