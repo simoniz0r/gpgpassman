@@ -19,7 +19,8 @@ main () {
             mv /tmp/gpgpassman/gpgpassman.png /usr/share/icons/gpgpassman.png
             echo "Moving .desktop file to /usr/share/applications/gpgpassman.desktop"
             mv /tmp/gpgpassman/gpgpassman.desktop /usr/share/applications/gpgpassman.desktop
-
+            rm -rf /tmp/gpgpassman
+            echo "Install finished!"
             ;;
         uninstall)
             read -p "Uninstall gpgpassman from /usr/bin/gpgpassman? Y/N " -n 1 -r
