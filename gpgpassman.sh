@@ -202,12 +202,10 @@ helpfunc () {
 zenitymain () {
     case $1 in
         Add*)
-            if [ -z $SERVNAME ]; then
-                SERVNAME=$(zenity --entry --title=gpgpassman --cancel-label="Main menu" --width=540 --height=460 --text="Add a new encrypted password.\n\nYou will be prompted for two different password inputs.\nThe first is the password that you use to login to the service.\nThe second is the password used for gpg encryption.\n\nYou will be prompted to overwrite already managed services.\n\n\n\n\n\n\n\n\n\n\nEnter the service name to encrypt a password for:")
-                if [[ $? -eq 1 ]]; then
-                    SERVNAME=""
-                    zenitymain
-                fi
+            SERVNAME=$(zenity --entry --title=gpgpassman --cancel-label="Main menu" --width=540 --height=460 --text="Add a new encrypted password.\n\nYou will be prompted for two different password inputs.\nThe first is the password that you use to login to the service.\nThe second is the password used for gpg encryption.\n\nYou will be prompted to overwrite already managed services.\n\n\n\n\n\n\n\n\n\n\nEnter the service name to encrypt a password for:")
+            if [[ $? -eq 1 ]]; then
+                SERVNAME=""
+                zenitymain
             fi
             if [ -f "$GPMDIR/$SERVNAME/$SERVNAME.gpg" ];then
                 zenity --question --title=gpgpassman --text="Password for $SERVNAME is already stored; overwrite (clipboard will also be cleared)?" --cancel-label=No --ok-label=Yes
