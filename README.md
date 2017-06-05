@@ -10,7 +10,6 @@ dec - Decrypt a stored password file using the service name and copy to clipboar
 
 bac - Backup your passwords to a new directory.
 - Ex: 'gpgpassman bac /home/simonizor/passwordbackup'
-- Can also be executed as 'gpgpassman dec' to launch a zenity window to input service or launch terminal if zenity is not installed.
 
 rem - Remove a stored password file using the service name.
 - Ex: 'gpgpassman rem servicename'

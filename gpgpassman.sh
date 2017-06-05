@@ -190,7 +190,6 @@ helpfunc () {
     echo "- Ex: 'gpgpassman dec servicename'"
     echo "${bold}bac${normal} - Backup your passwords to a new directory."
     echo "- Ex: 'gpgpassman bac /home/simonizor/passwordbackup'"
-    echo "- Can also be executed as 'gpgpassman dec' to launch a zenity window to input service or launch terminal if zenity is not installed."
     echo "${bold}rem${normal} - Remove a stored password file using the service name."
     echo "- Ex: 'gpgpassman rem servicename'"
     echo "${bold}dir${normal} - Change default directory used by gpgpassman. Only passwords in the currently configured directory will be able to be managed."
