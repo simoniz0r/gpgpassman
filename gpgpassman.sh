@@ -4,6 +4,7 @@
 # If you have 'zenity' installed, executing 'gpgpassman gui' will show a full GUI for all of the scripts options.
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
+
 GPMVER="1.4.2"
 X="v1.4.2 - Moved all zenity GUI related things into the zenitymain function in order to clean up the main function."
 # ^^Remember to update this every release and do not move their position!
