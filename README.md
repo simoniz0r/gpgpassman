@@ -1,6 +1,7 @@
 # [gpgpassman](http://www.simonizor.gq/linuxapps)
 
 Usage:
+
 add - Add encrypted password file.
 - Ex: 'gpgpassman add servicename'
 dec - Decrypt a stored password file using the service name and copy to clipboard for 45 seconds.
