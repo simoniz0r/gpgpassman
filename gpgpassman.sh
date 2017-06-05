@@ -604,7 +604,7 @@ if [ ! -f "$GPMCONFDIR/gpgpassman.conf" ]; then
     mkdir $GPMCONFDIR
     mkdir $GPMINITDIR
     echo "$GPMINITDIR" > $GPMCONFDIR/gpgpassman.conf
-    zenity --error --text="$GPMCONFDIR created and config file written; rung gpgpassman again." || echo "$GPMCONFDIR created and config file written; run gpgpassman again."
+    zenity --error --text="$GPMCONFDIR created and config file written; run gpgpassman again." || echo "$GPMCONFDIR created and config file written; run gpgpassman again."
     exit 0
 fi
 programisinstalled "gpg"
