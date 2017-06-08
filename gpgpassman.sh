@@ -5,8 +5,8 @@
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
 
-GPMVER="1.4.2"
-X="v1.4.2 - Moved all zenity GUI related things into the zenitymain function in order to clean up the main function."
+GPMVER="1.4.3"
+X="v1.4.3 - Added detection for no service name input when removing passwords."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -307,6 +307,10 @@ zenitymain () {
                 SERVNAME=""
                 zenitymain
             fi
+            if [ -z $SERVNAME ]; then
+                zenity --error --title=gpgpassman --timeout=5 --text="No service name entered; try again."
+                zenitymain "Remove"
+            fi
             zenity --question --title=gpgpassman --text="Passwords cannot be recovered; are you sure you want to remove password for $SERVNAME?" --ok-label="Yes"
             if [[ $? -eq 1 ]]; then
                 zenity --warning --title=gpgpassman --text="Password for $SERVNAME was not removed."
@@ -485,6 +489,10 @@ main () {
         rem*|Rem*)
             if [ -z "$SERVNAME" ]; then
                 read -p "Input the service name for the password you want to remove: " SERVNAME
+            fi
+            if [ -z $SERVNAME ]; then
+                echo "No service name entered; try again."
+                main "rem"
             fi
             if [ -f "$GPMDIR/$SERVNAME/$SERVNAME.gpg" ];then
                 read -p "Passwords cannot be recovered; are you sure you want to remove the encrypted password for $SERVNAME? Y/N " -n 1 -r
