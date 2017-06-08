@@ -133,7 +133,7 @@ updatecheck () {
     UPNOTES="$(wget -q "https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.sh" -O - | sed -n '9p' | tr -d 'X="')"
     VERTEST="$(wget -q "https://raw.githubusercontent.com/simoniz0r/gpgpassman/master/gpgpassman.sh" -O - | sed -n '8p' | tr -d 'GPMVER="')"
     if [[ $GPMVER < $VERTEST ]]; then
-        if [ "$ZHEADLESS" != "1" ]; then
+        if [ "$ZENITYGUI" != "1" ]; then
             echo "Installed version: $GPMVER -- Current version: $VERTEST"
             echo "A new version is available!"
             echo "$UPNOTES"
@@ -163,7 +163,7 @@ updatecheck () {
             fi
         fi
     else
-        if [ "$ZHEADLESS" = "1" ]; then
+        if [ "$ZENITYGUI" = "1" ]; then
             zenity --info --title=gpgpassman --text="gpgpassman is up to date."
             zenitymain
         else
@@ -381,7 +381,7 @@ zenitymain () {
             if [[ $? -eq 1 ]]; then
                 exit 0
             fi
-            ZHEADLESS="1"
+            ZENITYGUI="1"
             zenitymain "$ZMAINCASE"
             ;;
     esac
