@@ -5,8 +5,8 @@
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
 
-GPMVER="1.4.3"
-X="v1.4.3 - Added detection for no service name input when removing passwords."
+GPMVER="1.4.4"
+X="v1.4.4 - Fixed 'Clear now and close' after decrypting a password in GUI mode so that gpgpassman actually closes."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -276,10 +276,9 @@ zenitymain () {
                 zenitymain "Decrypt"
             fi
             zenity --forms --title=gpgpassman --timeout=45 --text="Copied password to clipboard; clipboard will be cleared after 45 seconds..." --cancel-label="Clear now and return to main" --ok-label="Clear now and close"
-            if [[ $? -eq 1 ]]; then
+            if [[ $? -eq 0 ]]; then
                 echo -n "Password cleared from clipboard" | xclip -selection c -i
-                SERVNAME=""
-                zenitymain
+                exit 0
             else
                 echo -n "Password cleared from clipboard" | xclip -selection c -i
                 SERVNAME=""
