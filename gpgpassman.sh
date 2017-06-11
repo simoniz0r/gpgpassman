@@ -5,8 +5,8 @@
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
 
-GPMVER="1.4.4"
-X="v1.4.4 - Fixed 'Clear now and close' after decrypting a password in GUI mode so that gpgpassman actually closes."
+GPMVER="1.4.5"
+X="v1.4.5 - Added --no-tty option to gpg in GUI mode to prevent gpg sending password input to tty."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -252,7 +252,7 @@ zenitymain () {
                 mkdir $GPMDIR/$SERVNAME
             fi
             zenity --warning --title=gpgpassman --timeout=5 --text="Enter the password to be used for encryption/decryption:"
-            echo "$PASSINPUT" | gpg -c -o $GPMDIR/$SERVNAME/$SERVNAME.gpg
+            echo "$PASSINPUT" | gpg --no-tty -c -o $GPMDIR/$SERVNAME/$SERVNAME.gpg
             if [ -f "$GPMDIR/$SERVNAME/$SERVNAME.gpg" ]; then
                 zenity --warning --title=gpgpassman --text="Password for $SERVNAME encrypted in $GPMDIR/$SERVNAME/$SERVNAME.gpg"
                 SERVNAME=""
@@ -269,7 +269,7 @@ zenitymain () {
                 SERVNAME=""
                 zenitymain
             fi
-            echo -n "$(gpg -d $SERVNAME)" | xclip -selection c -i
+            echo -n "$(gpg --no-tty -d $SERVNAME)" | xclip -selection c -i
             if [ "$(xclip -selection c -o)" = "" ]; then
                 zenity --error --title=gpgpassman --text="Wrong password or gpg failure!"
                 SERVNAME=""
@@ -316,7 +316,7 @@ zenitymain () {
                 SERVNAME=""
                 zenitymain
             else
-                echo -n "$(gpg -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
+                echo -n "$(gpg --no-tty -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
                 if [ "$(xclip -selection c -o)" = "" ]; then
                     zenity --error --title=gpgpassman --text="Wrong password or gpg failure!"
                     SERVNAME=""
