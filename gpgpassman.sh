@@ -5,8 +5,8 @@
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
 
-GPMVER="1.4.5"
-X="v1.4.5 - Added --no-tty option to gpg in GUI mode to prevent gpg sending password input to tty."
+GPMVER="1.4.6"
+X="v1.4.6 - Cleanded up the updatescript functions."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -19,37 +19,19 @@ normal=$(tput sgr0)
 updatescript () {
 cat >/tmp/updatescript.sh <<EOL
 runupdate () {
-    if [ "$SCRIPTNAME" = "/usr/bin/gpgpassman" ]; then
-        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
-        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-            sudo rm -f /usr/bin/gpgpassman
-            sudo mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
-            rm -rf /tmp/gpgpassman
-            sudo chmod +x /usr/bin/gpgpassman
-        else
-            read -p "Update Failed! Try again? Y/N " -n 1 -r
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                runupdate
-            else
-                echo "gpgpassman was not updated!"
-                exit 0
-            fi
-        fi
+    git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
+    if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
+        rm -f $SCRIPTNAME || { echo "rm failed; retrying with sudo..."; sudo rm -f $SCRIPTNAME; }
+        mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME || { echo "mv failed; retrying with sudo..."; sudo mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME; }
+        rm -rf /tmp/gpgpassman
+        chmod +x $SCRIPTNAME || { echo "chmod failed; retrying with sudo..."; sudo chmod +x $SCRIPTNAME; }
     else
-        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
-        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-            rm -f $SCRIPTNAME
-            mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME
-            rm -rf /tmp/gpgpassman
-            chmod +x $SCRIPTNAME
+        read -p "Update Failed! Try again? Y/N " -n 1 -r
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            runupdate
         else
-            read -p "Update Failed! Try again? Y/N " -n 1 -r
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                runupdate
-            else
-                echo "gpgpassman was not updated!"
-                exit 0
-            fi
+            echo "gpgpassman was not updated!"
+            exit 0
         fi
     fi
     if [ -f $SCRIPTNAME ]; then
@@ -72,40 +54,20 @@ EOL
 zenityupdatescript () {
 cat >/tmp/zenityupdatescript.sh <<EOL
 runupdate () {
-    if [ "$SCRIPTNAME" = "/usr/bin/gpgpassman" ]; then
-        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
-        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-            zenity --password --title=gpgpassman | sudo -S rm -f /usr/bin/gpgpassman || { zenity --error --title=gpgpassman --text="Incorrect password!" ; exec $SCRIPTNAME gui ; exit 0 ; }
-            sudo  mv /tmp/gpgpassman/gpgpassman.sh /usr/bin/gpgpassman
-            rm -rf /tmp/gpgpassman
-            sudo  chmod +x /usr/bin/gpgpassman
-            sudo -K
-        else
-            zenity --question --title=gpgpassman --text="Update Failed! Try again? "
-            if [[ $? -eq 0 ]]; then
-                runupdate
-            else
-                zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
-                exec $SCRIPTNAME gui
-                exit 0
-            fi
-        fi
+    git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
+    if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
+        rm -f $SCRIPTNAME || zenity --password --title=gpgpassman | sudo -S rm -f /usr/bin/gpgpassman || { zenity --error --title=gpgpassman --text="Incorrect password!" ; exec $SCRIPTNAME gui ; exit 0 ; }
+        mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME || sudo mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME
+        rm -rf /tmp/gpgpassman
+        chmod +x $SCRIPTNAME || sudo chmod +x $SCRIPTNAME
     else
-        git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
-        if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-            rm -f $SCRIPTNAME
-            mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME
-            rm -rf /tmp/gpgpassman
-            chmod +x $SCRIPTNAME
+        zenity --question --title=gpgpassman --text="Update Failed! Try again? "
+        if [[ $? -eq 0 ]]; then
+            runupdate
         else
-            zenity --question --title=gpgpassman --text="Update Failed! Try again? "
-            if [[ $? -eq 0 ]]; then
-                runupdate
-            else
-                zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
-                exec $SCRIPTNAME gui
-                exit 0
-            fi
+            zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
+            exec $SCRIPTNAME gui
+            exit 0
         fi
     fi
     if [ -f $SCRIPTNAME ]; then
