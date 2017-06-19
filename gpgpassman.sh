@@ -5,8 +5,8 @@
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps
 
 
-GPMVER="1.4.6"
-X="v1.4.6 - Cleanded up the updatescript functions."
+GPMVER="1.4.7"
+X="v1.4.7 - Changed 'Decrypt a stored password' menu in GUI to display a list of passwords instead of user having to select them through a file selection.  Also added listing of passwords when not in GUI mode to dec and rem arguments when no service name is input."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
