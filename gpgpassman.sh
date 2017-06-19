@@ -142,7 +142,10 @@ programisinstalled () {
 }
 
 helpfunc () {
-    echo "Currently managed services: $(dir $GPMDIR)"
+    echo
+    echo "Currently managed services:"
+    ls $GPMDIR | tr ' ' '\n'
+    echo
     echo "Current password storage directory: $GPMDIR"
     echo
     echo "${bold}Usage:"
@@ -226,12 +229,12 @@ zenitymain () {
             fi
             ;;
         Decrypt*)
-            SERVNAME=$(zenity --file-selection --file-filter=*.gpg --title="gpgpassman -- Select the gpg file to decrypt" --filename=$GPMDIR/)
+            SERVNAME="$(ls $GPMDIR | tr ' ' '\n' | zenity --list --cancel-label="Main menu" --width=540 --height=460 --title=gpgpassman --text="Password storage directory:\n$GPMDIR\n\nSelect a password to decrypt:" --column="Cases" --hide-header)"
             if [[ $? -eq 1 ]]; then
                 SERVNAME=""
                 zenitymain
             fi
-            echo -n "$(gpg --no-tty -d $SERVNAME)" | xclip -selection c -i
+            echo -n "$(gpg --no-tty -d $GPMDIR/$SERVNAME/$SERVNAME.gpg)" | xclip -selection c -i
             if [ "$(xclip -selection c -o)" = "" ]; then
                 zenity --error --title=gpgpassman --text="Wrong password or gpg failure!"
                 SERVNAME=""
@@ -405,6 +408,11 @@ main () {
             ;;
         dec*|Dec*)
             if [ -z "$SERVNAME" ]; then
+                echo "Currently managed services:"
+                ls $GPMDIR | tr ' ' '\n'
+                echo
+                echo "Current password storage directory: $GPMDIR"
+                echo
                 read -p "Enter the service name to decrypt password for: " SERVNAME
             fi
             if [ -f "$GPMDIR/$SERVNAME/$SERVNAME.gpg" ];then 
@@ -449,6 +457,11 @@ main () {
             ;;
         rem*|Rem*)
             if [ -z "$SERVNAME" ]; then
+                echo "Currently managed services:"
+                ls $GPMDIR | tr ' ' '\n'
+                echo
+                echo "Current password storage directory: $GPMDIR"
+                echo
                 read -p "Input the service name for the password you want to remove: " SERVNAME
             fi
             if [ -z $SERVNAME ]; then
