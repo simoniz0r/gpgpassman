@@ -23,3 +23,5 @@ gen - Generate new passwords using 'apg'.
 gui - If 'zenity' is installed, gpgpassman's GUI will be launched.
 - Ex: 'gpgpassman gui'
 
+![gpgpassman](/Screenshot.png)
+
