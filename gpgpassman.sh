@@ -5,8 +5,8 @@
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps -- License: GPLv2 Only
 
 
-GPMVER="1.4.8"
-X="Fix: Remove all places where function is called within itself to avoid multiple processes being spawned and staying open in the background after gpgpassman is closed."
+GPMVER="1.4.9"
+X="Fix: Update check in GUI mode exiting after up to date message."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -28,7 +28,7 @@ runupdate () {
     else
         read -p "Update Failed! Try again? Y/N " -n 1 -r
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            runupdate
+            exec /tmp/updatescript.sh
         else
             echo "gpgpassman was not updated!"
             exit 0
@@ -40,7 +40,7 @@ runupdate () {
     else
         read -p "Update Failed! Try again? Y/N " -n 1 -r
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            runupdate
+            exec /tmp/updatescript.sh
         else
             echo "gpgpassman was not updated!"
             exit 0
@@ -63,7 +63,7 @@ runupdate () {
     else
         zenity --question --title=gpgpassman --text="Update Failed! Try again? "
         if [[ $? -eq 0 ]]; then
-            runupdate
+            exec /tmp/zenityupdatescript.sh
         else
             zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
             exec $SCRIPTNAME gui
@@ -78,7 +78,7 @@ runupdate () {
     else
         zenity --question --title=gpgpassman --text="Update Failed! Try again? "
             if [[ $? -eq 0 ]]; then
-            runupdate
+            exec /tmp/zenityupdatescript.sh
         else
             zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
             exec $SCRIPTNAME gui
@@ -121,13 +121,13 @@ updatecheck () {
                 exit 0
             else
                 zenity --warning --title=gpgpassman --text="gpgpassman was not updated!"
-                zenitymain
+                zenitystart
             fi
         fi
     else
         if [ "$ZENITYGUI" = "1" ]; then
             zenity --info --title=gpgpassman --text="gpgpassman is up to date."
-            zenitymain
+            zenitystart
         else
             echo "Installed version: $GPMVER -- Current version: $VERTEST"
             echo "$UPNOTES"
