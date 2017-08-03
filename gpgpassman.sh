@@ -5,8 +5,8 @@
 # Written by simonizor 3/22/2017 - http://www.simonizor.gq/linuxapps -- License: GPLv2 Only
 
 
-GPMVER="1.4.9"
-X="Fix: Update check in GUI mode exiting after up to date message."
+GPMVER="1.5.0"
+X="Change: Remove self updating function.  tar-pkg is recommended for upgrading gpgpassman in the future."
 # ^^Remember to update this every release and do not move their position!
 SCRIPTNAME="$0"
 GPMDIR="$(< ~/.config/gpgpassman/gpgpassman.conf)"
@@ -15,80 +15,6 @@ GPMCONFDIR=~/.config/gpgpassman
 SERVNAME="$2"
 bold=$(tput bold)
 normal=$(tput sgr0)
-
-updatescript () {
-cat >/tmp/updatescript.sh <<EOL
-runupdate () {
-    git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
-    if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-        rm -f $SCRIPTNAME || { echo "rm failed; retrying with sudo..."; sudo rm -f $SCRIPTNAME; }
-        mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME || { echo "mv failed; retrying with sudo..."; sudo mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME; }
-        rm -rf /tmp/gpgpassman
-        chmod +x $SCRIPTNAME || { echo "chmod failed; retrying with sudo..."; sudo chmod +x $SCRIPTNAME; }
-    else
-        read -p "Update Failed! Try again? Y/N " -n 1 -r
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            exec /tmp/updatescript.sh
-        else
-            echo "gpgpassman was not updated!"
-            exit 0
-        fi
-    fi
-    if [ -f $SCRIPTNAME ]; then
-        echo "Update finished!"
-        rm -f /tmp/updatescript.sh
-    else
-        read -p "Update Failed! Try again? Y/N " -n 1 -r
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            exec /tmp/updatescript.sh
-        else
-            echo "gpgpassman was not updated!"
-            exit 0
-        fi
-    fi
-}
-runupdate
-EOL
-}
-
-zenityupdatescript () {
-cat >/tmp/zenityupdatescript.sh <<EOL
-runupdate () {
-    git clone https://github.com/simoniz0r/gpgpassman.git /tmp/gpgpassman
-    if [ -f "/tmp/gpgpassman/gpgpassman.sh" ]; then
-        rm -f $SCRIPTNAME || zenity --password --title=gpgpassman | sudo -S rm -f /usr/bin/gpgpassman || { zenity --error --title=gpgpassman --text="Incorrect password!" ; exec $SCRIPTNAME gui ; exit 0 ; }
-        mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME || sudo mv /tmp/gpgpassman/gpgpassman.sh $SCRIPTNAME
-        rm -rf /tmp/gpgpassman
-        chmod +x $SCRIPTNAME || sudo chmod +x $SCRIPTNAME
-    else
-        zenity --question --title=gpgpassman --text="Update Failed! Try again? "
-        if [[ $? -eq 0 ]]; then
-            exec /tmp/zenityupdatescript.sh
-        else
-            zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
-            exec $SCRIPTNAME gui
-            exit 0
-        fi
-    fi
-    if [ -f $SCRIPTNAME ]; then
-        zenity --info --title=gpgpassman --text="Update finished!"
-        rm -f /tmp/updatescript.sh
-        exec $SCRIPTNAME gui
-        exit 0
-    else
-        zenity --question --title=gpgpassman --text="Update Failed! Try again? "
-            if [[ $? -eq 0 ]]; then
-            exec /tmp/zenityupdatescript.sh
-        else
-            zenity --error --title=gpgpassman --text="gpgpassman was not updated!"
-            exec $SCRIPTNAME gui
-            exit 0
-        fi
-    fi
-}
-runupdate
-EOL
-}
 
 updatecheck () {
     echo "Checking for new version..."
@@ -99,30 +25,9 @@ updatecheck () {
             echo "Installed version: $GPMVER -- Current version: $VERTEST"
             echo "A new version is available!"
             echo "$UPNOTES"
-            read -p "Would you like to update? Y/N " -n 1 -r
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                echo
-                echo "Creating update script..."
-                updatescript
-                chmod +x /tmp/updatescript.sh
-                echo "Running update script..."
-                exec /tmp/updatescript.sh
-                exit 0
-            else
-                echo
-                echo "gpgpassman was not updated."
-            fi
         else
-            zenity --question --title=gpgpassman --text="A new version is available; would you like to update?\n\n$UPNOTES"
-            if [ $? -eq 0 ]; then
-                zenityupdatescript
-                chmod +x /tmp/zenityupdatescript.sh
-                exec /tmp/zenityupdatescript.sh
-                exit 0
-            else
-                zenity --warning --title=gpgpassman --text="gpgpassman was not updated!"
-                zenitystart
-            fi
+            zenity --info --title=gpgpassman --text="A new version is available!\n\n$UPNOTES"
+            zenitystart
         fi
     else
         if [ "$ZENITYGUI" = "1" ]; then
