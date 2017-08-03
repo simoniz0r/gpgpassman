@@ -529,24 +529,7 @@ main () {
             fi
             exit 0
             ;;
-        gui)
-            programisinstalled "zenity"
-            if [ $return = "1" ]; then
-                zenitystart
-            else
-                echo "gpgpassman - http://www.simonizor.gq/linuxapps"
-                echo "A script that uses 'gpg' to encrypt and decrypt passwords."
-                echo "gpgpassman now has a GUI; install 'zenity' to check it out!"
-                echo
-                helpfunc
-                echo
-                exit 0
-            fi
-            ;;
-        exit*|Exit*)
-            exit 0
-            ;;
-        *)
+        help)
             echo "gpgpassman - http://www.simonizor.gq/linuxapps"
             echo "A script that uses 'gpg' to encrypt and decrypt passwords."
             helpfunc
@@ -559,6 +542,23 @@ main () {
                 fi
             fi
             exit 0
+            ;;
+        exit*|Exit*)
+            exit 0
+            ;;
+        *)
+            programisinstalled "zenity"
+            if [ $return = "1" ]; then
+                zenitystart
+            else
+                echo "gpgpassman - http://www.simonizor.gq/linuxapps"
+                echo "A script that uses 'gpg' to encrypt and decrypt passwords."
+                echo "gpgpassman now has a GUI; install 'zenity' to check it out!"
+                echo
+                helpfunc
+                echo
+                exit 0
+            fi
             ;;
     esac
 }
